@@ -19,9 +19,10 @@ const TodoForm = () => {
             //})
 
             // 2 Updating the data in cache directly.
-            queryClient.setQueryData<Todo[]>(['todos'], todos => [savedTodo, ...(todos || [])])
+            queryClient.setQueryData<Todo[]>(['todos'], todos => [savedTodo, ...(todos || [])]);
 
-        }
+            if (ref.current) ref.current.value = ''; // tar bort värde ur input efter success post.
+        },
     });
 
     const ref = useRef<HTMLInputElement>(null);
@@ -51,8 +52,9 @@ const TodoForm = () => {
                 <div
                     className="col">
                     <button
+                        disabled={addTodo.isLoading}
                         className="btn btn-primary">
-                        Add
+                        {addTodo.isLoading ? 'Adding...' : 'Add'} {/*mutate har också isloading funktionalitet precis som query*/}
                     </button>
                 </div>
             </form>
