@@ -1,51 +1,11 @@
 import {useRef} from 'react';
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {Todo} from "./hooks/useTodos";
-import axios from "axios";
-
-interface AddTodoContext {
-    previousTodos: Todo[]
-}
+import useAddTodo from "./hooks/useAddTodo";
 
 const TodoForm = () => {
-
-    const queryClient = useQueryClient();
-
-    const addTodo = useMutation<Todo, Error, Todo, AddTodoContext>({
-
-        mutationFn: (todo: Todo) =>
-            axios
-                .post<Todo>('https://jsonplaceholder.typicode.com/todos', todo)
-                .then(res => res.data),
-
-        onMutate: (newTodo: Todo) => { // Uppdaterar så posten syns i listan direkt, sen kollar vi om det fungerade. OPTIMISTIC
-
-            const previousTodos = queryClient.getQueryData<Todo[]>(['todos']) || []; // context objekt till onerror nedan
-
-            queryClient.setQueryData<Todo[]>(['todos'],
-                todos => [newTodo, ...(todos || [])]);
-
-            if (ref.current) ref.current.value = '';
-
-            return {previousTodos} // här returnerar vi context.
-        },
-
-        onSuccess: (savedTodo, newTodo) => {
-
-            queryClient.setQueryData<Todo[]>(['todos'], // on success, så lägger posten till i listan i backend.
-                todos => todos?.map(todo =>
-                    todo === newTodo ? savedTodo : todo)) // här uppdaterar vi listan. om inte så oförändrad.
-        },
-
-        onError: (error, newTodo, context) => {
-
-            if(!context) return; // här kollar vi om context är truthy,
-
-            queryClient.setQueryData<Todo[]>(['todos'], context.previousTodos) // om det gick fel så tar vi bort posten och återgår till previous som vi har som context.
-        }
-    });
-
     const ref = useRef<HTMLInputElement>(null);
+    const addTodo = useAddTodo(() => {
+        if (ref.current) ref.current.value = '';
+    })
 
     return (
         <>
